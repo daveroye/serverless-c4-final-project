@@ -9,7 +9,7 @@ const todosTable = process.env.TODOS_TABLE
 const logger = createLogger('getToDos')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  logger.info('Processing event: ', event)
+  logger.info('Processing event: ', { body: event.body })
 
   const result = await docClient.scan({
     TableName: todosTable
@@ -17,7 +17,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   // get user ID from incoming request
   const id = getUserId(event)
-  logger.info('User ID: ', id)
+  logger.info('User ID: ', { userId: id })
 
   // return DB values matching user ID
   const items = result.Items.filter(function( obj ) {
