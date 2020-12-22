@@ -16,8 +16,8 @@ provider:
   region: ${opt:region, 'us-east-2'}
 
   environment:
-    TODOS_TABLE: Todos-Table-${self:provider.stage}
-    INDEX_NAME: Todos-Index-${self:provider.stage}
+    TODOS_TABLE: Todos-Table-LSI-${self:provider.stage}
+    INDEX_NAME: Todos-Index-LSI-${self:provider.stage}
 
   # iamRoleStatements:
   #   - Effect: Allow
@@ -121,25 +121,25 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: partitionKey
+          - AttributeName: userId
             AttributeType: S
-          - AttributeName: sortKey
+          - AttributeName: todoId
             AttributeType: S
-          - AttributeName: indexKey
+          - AttributeName: createdAt
             AttributeType: S
         KeySchema:
-          - AttributeName: partitionKey
+          - AttributeName: userId
             KeyType: HASH
-          - AttributeName: sortKey
+          - AttributeName: todoId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.INDEX_NAME}
             KeySchema:
-              - AttributeName: partitionKey
+              - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: indexKey
+              - AttributeName: createdAt
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
