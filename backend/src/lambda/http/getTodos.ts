@@ -11,19 +11,18 @@ const logger = createLogger('getToDos')
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.info('Processing event: ', { body: event.body })
 
-  const result = await docClient.scan({
-    TableName: todosTable
-  }).promise()
-
   // get user ID from incoming request
   const id = getUserId(event)
   logger.info('User ID: ', { userId: id })
 
-  // return DB values matching user ID
-  const items = result.Items.filter(function( obj ) {
-    return obj['userId'] === id
-  })
-  logger.info('Matching TODO items: ', items)
+  const results = await docClient.query({
+    TableName: todosTable,
+    KeyConditionExpression: 'userId = :userId',
+    ExpressionAttributeValues: {
+      ':userId': id
+    }
+  }).promise()
+  logger.info('Matching TODO items: ', results.Items)
 
   return {
     statusCode: 200,
@@ -31,7 +30,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-      items
+      items: results.Items
     })
   }
 }
