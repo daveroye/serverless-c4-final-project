@@ -3,6 +3,7 @@ import { TodoItem } from '../models/TodoItem'
 import { ToDoAccess } from '../dataLayer/todoAccess'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
+import { bool } from 'aws-sdk/clients/signer'
 
 const toDoAccess = new ToDoAccess()
 
@@ -30,12 +31,12 @@ export async function createTodo(
 export async function udpateTodo(
     updatedTodo: UpdateTodoRequest,
     userId: string,
-    todoId: string) {
-    await toDoAccess.updateTodo(userId, todoId, updatedTodo)
+    todoId: string): Promise<boolean>  {
+    return await toDoAccess.updateTodo(userId, todoId, updatedTodo)
 }
 
-export async function deleteTodo(userId: string, todoId: string) {
-    await toDoAccess.deleteTodo(userId, todoId)
+export async function deleteTodo(userId: string, todoId: string): Promise<boolean> {
+    return await toDoAccess.deleteTodo(userId, todoId) as boolean
 }
 
 export async function generateUploadUrl(userId: string, todoId: string): Promise<string> {

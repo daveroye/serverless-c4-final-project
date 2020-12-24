@@ -21,49 +21,74 @@ export class ToDoAccess {
     async getTodos(userId: string): Promise<TodoItem[]> {
         logger.info('Getting all todo items')
 
-        const result = await this.docClient.query({
-            TableName: this.todoTable,
-            KeyConditionExpression: 'userId = :userId',
-            ExpressionAttributeValues: {
-                ':userId': userId
-            }
-        }).promise()
-
-        const items = result.Items
-        logger.info('Matching TODO items: ', items)
-
-        return items as TodoItem[]
+        try {
+            const result = await this.docClient.query({
+                TableName: this.todoTable,
+                KeyConditionExpression: 'userId = :userId',
+                ExpressionAttributeValues: {
+                    ':userId': userId
+                }
+            }).promise()
+            const items = result.Items
+            logger.info('Matching TODO items: ', items)
+            return items as TodoItem[]
+        }
+        catch (error) {
+            logger.error('error from DB on getting todos: ', { error: error })
+            return null
+        }
     }
 
     async createTodo(todo: TodoItem): Promise<TodoItem> {
-        const result = await this.docClient.put({
-            TableName: this.todoTable,
-            Item: todo
-        }).promise()
-        logger.info('result from DB on todo create: ', { result: result })
-
-        return todo
+        try {
+            const result = await this.docClient.put({
+                TableName: this.todoTable,
+                Item: todo
+            }).promise()
+            logger.info('result from DB on todo create: ', { result: result })
+            return todo
+        }
+        catch (error) {
+            logger.error('error from DB on creating todo: ', { error: error })
+            return null
+        }   
     }
 
-    async updateTodo(userId: string, todoId: string, updatedTodo: TodoUpdate) {
-        await this.docClient.update({
-            TableName: this.todoTable,
-            Key: { "userId": userId, "todoId": todoId },
-            ExpressionAttributeNames: { "#n": "name" },
-            UpdateExpression: "set #n=:n, dueDate=:dd, done=:d",
-            ExpressionAttributeValues: {
-                ':n': updatedTodo.name,
-                ':dd': updatedTodo.dueDate,
-                ':d': updatedTodo.done
-            }
-        }).promise()
+    async updateTodo(userId: string, todoId: string, updatedTodo: TodoUpdate): Promise<boolean> {
+        try {
+            await this.docClient.update({
+                TableName: this.todoTable,
+                Key: { "userId": userId, "todoId": todoId },
+                ExpressionAttributeNames: { "#n": "name" },
+                UpdateExpression: "set #n=:n, dueDate=:dd, done=:d",
+                ExpressionAttributeValues: {
+                    ':n': updatedTodo.name,
+                    ':dd': updatedTodo.dueDate,
+                    ':d': updatedTodo.done
+                }
+            }).promise()
+            logger.info('updated DB todo item: ', { todoId: todoId })
+            return true
+        }
+        catch (error) {
+            logger.error('error from DB on updating todo: ', { todoId: todoId, error: error })
+            return false
+        }
     }
 
-    async deleteTodo(userId: string, todoId: string) {
-        await this.docClient.delete({
-            TableName: this.todoTable,
-            Key: { "userId": userId, "todoId": todoId }
-        }).promise()
+    async deleteTodo(userId: string, todoId: string): Promise<boolean>  {
+        try {
+            await this.docClient.delete({
+                TableName: this.todoTable,
+                Key: { "userId": userId, "todoId": todoId }
+            }).promise()
+            logger.info('deleted from DB todo item: ', { todoId: todoId })
+            return true
+        }
+        catch (error) {
+            logger.error('error from DB on deleting todo: ', { todoId: todoId, error: error })
+            return false
+        }
     }
 
     async generateUploadUrl(userId: string, todoId: string): Promise<string> {
@@ -83,10 +108,10 @@ export class ToDoAccess {
         }
         catch (error) {
             logger.error('error from DB on updating image URL: ', { error: error })
+            throw new Error('URL for todo item could not be stored in DB')
         }
         return signedURL as string
     }
-
 }
 
 function getUploadUrl(imageId: string) {

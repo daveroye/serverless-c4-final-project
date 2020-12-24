@@ -1,8 +1,8 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { createLogger } from '../../utils/logger'
-import {getUserId} from '../utils'
-import {deleteTodo} from '../../businessLogic/todos'
+import { getUserId } from '../utils'
+import { deleteTodo } from '../../businessLogic/todos'
 
 const logger = createLogger('deleteToDos')
 
@@ -14,14 +14,26 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const id = getUserId(event)
   logger.info('User ID: ', { userId: id })
 
-  await deleteTodo(id, todoId)
+  if (await deleteTodo(id, todoId)) {
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
-    body: ""
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: ""
+    }
+  } else {
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'DB server did not delete todo item'
+      })
+    }
   }
 }

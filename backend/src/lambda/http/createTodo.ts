@@ -2,8 +2,8 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { createLogger } from '../../utils/logger'
-import {getUserId} from '../utils'
-import {createTodo} from '../../businessLogic/todos'
+import { getUserId } from '../utils'
+import { createTodo } from '../../businessLogic/todos'
 
 const logger = createLogger('createToDos')
 
@@ -17,15 +17,27 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   const newItem = await createTodo(newTodo, userId)
 
-  return {
-    statusCode: 201,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
-    body: JSON.stringify({
-      item: newItem
-    })
+  if (!newItem) {
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'DB server did not save new item'
+      })
+    }
+  } else {
+    return {
+      statusCode: 201,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        item: newItem
+      })
+    }
   }
-
 }

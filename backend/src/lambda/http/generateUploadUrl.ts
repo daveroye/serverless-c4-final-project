@@ -14,15 +14,28 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const id = getUserId(event)
   logger.info('User ID: ', { userId: id })
 
-  const signedURL = await generateUploadUrl(id, todoId)
+  try {
+    const signedURL = await generateUploadUrl(id, todoId)
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({
-      uploadUrl: signedURL
-    })
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({
+        uploadUrl: signedURL
+      })
+    }
+  }
+  catch (error) {
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({
+        error: error
+      })
+    }
   }
 }
