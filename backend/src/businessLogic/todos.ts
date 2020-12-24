@@ -3,7 +3,6 @@ import { TodoItem } from '../models/TodoItem'
 import { ToDoAccess } from '../dataLayer/todoAccess'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
-import { bool } from 'aws-sdk/clients/signer'
 
 const toDoAccess = new ToDoAccess()
 
