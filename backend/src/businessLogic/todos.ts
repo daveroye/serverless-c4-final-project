@@ -7,7 +7,7 @@ import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 const toDoAccess = new ToDoAccess()
 
 export async function getTodos(userId: string): Promise<TodoItem[]> {
-  return toDoAccess.getTodos(userId)
+    return toDoAccess.getTodos(userId)
 }
 
 export async function createTodo(
@@ -32,4 +32,12 @@ export async function udpateTodo(
     userId: string,
     todoId: string) {
     await toDoAccess.updateTodo(userId, todoId, updatedTodo)
+}
+
+export async function deleteTodo(userId: string, todoId: string) {
+    await toDoAccess.deleteTodo(userId, todoId)
+}
+
+export async function generateUploadUrl(userId: string, todoId: string): Promise<string> {
+    return await toDoAccess.generateUploadUrl(userId, todoId)
 }
