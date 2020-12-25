@@ -21,17 +21,43 @@ export class ToDoAccess {
     async getTodos(userId: string): Promise<TodoItem[]> {
         logger.info('Getting all todo items')
 
-        try {
-            const result = await this.docClient.query({
-                TableName: this.todoTable,
-                KeyConditionExpression: 'userId = :userId',
-                ExpressionAttributeValues: {
-                    ':userId': userId
+        // define query paramaters to be used to get all todo items including a key for pagination
+        const queryParams = { TableName: this.todoTable,
+//                              Limit: 4, // used to test pagination
+                              KeyConditionExpression: 'userId = :userId',
+                              ExpressionAttributeValues: { ':userId': userId }}
+        
+        // define routine to iteratively retrieve items by page
+        const getAllData = async (params) => {
+            const _getAllData = async (params, startKey) => {
+                if (startKey) {
+                    if (params.ExclusiveStartKey) {
+                        params.ExclusiveStartKey = startKey
+                    } else {
+                    params = {...params, ExclusiveStartKey: startKey}
+                    }
                 }
-            }).promise()
-            const items = result.Items
-            logger.info('Matching TODO items: ', items)
-            return items as TodoItem[]
+                logger.info('Parameters used for query', params)
+                return this.docClient.query(params).promise()
+            }
+            let lastEvaluatedKey = null
+            let rows = []
+            let pageNum : number = 0
+            do {
+                const result = await _getAllData(params, lastEvaluatedKey)
+                rows = rows.concat(result.Items)
+                lastEvaluatedKey = result.LastEvaluatedKey
+                logger.info('LastEvalutatedKey from query: ', 
+                            {lastEvaluatedKey: lastEvaluatedKey, 
+                             pageNumber: ++pageNum})
+            } while (lastEvaluatedKey)
+            return rows
+        }
+
+        try {
+            const allData = await getAllData(queryParams)
+            logger.info('Matching TODO items: ', allData)
+            return allData as TodoItem[]
         }
         catch (error) {
             logger.error('error from DB on getting todos: ', { error: error })
