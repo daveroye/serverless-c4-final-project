@@ -10,6 +10,18 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   // get user ID from incoming request
   const userId = getUserId(event)
+  if (userId == "") {
+    return {
+      statusCode: 406,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'User ID cannot be an empty string'
+      })
+    }
+  }
   logger.info('User ID: ', { userId: userId })
 
   // get sort parameter for DB query from incoming URL query string

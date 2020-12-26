@@ -8,11 +8,20 @@ const logger = createLogger('generateUploadURL')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
-  logger.info('Upload URL for ToDoID: ', { todoId: todoId })
-
-  // get user ID from incoming request
   const id = getUserId(event)
-  logger.info('User ID: ', { userId: id })
+  if (todoId == "" || id == "") {
+    return {
+      statusCode: 406,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'User and TodoItem IDs cannot be empty strings'
+      })
+    }
+  }
+  logger.info('Upload URL for ToDo item: ', { todoId: todoId, userId: id })
 
   try {
     const signedURL = await generateUploadUrl(id, todoId)
