@@ -9,19 +9,6 @@ const logger = createLogger('createToDos')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const newTodo: CreateTodoRequest = JSON.parse(event.body)
-  if (newTodo.name == "" || newTodo.dueDate == "") {
-    return {
-      statusCode: 406,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true
-      },
-      body: JSON.stringify({
-        error: 'Name and DueDate cannot be empty strings'
-      })
-    }
-
-  }
   logger.info('Creating ToDo: ', newTodo)
 
   // get user ID from incoming request
