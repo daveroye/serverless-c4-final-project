@@ -1,36 +1,43 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { createLogger } from '../../utils/logger'
-import * as AWS  from 'aws-sdk'
-import {getUserId} from '../utils'
+import { getUserId } from '../utils'
+import { getTodos } from '../../businessLogic/todos'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 const logger = createLogger('getToDos')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  logger.info('Processing event: ', { body: event.body })
 
   // get user ID from incoming request
-  const id = getUserId(event)
-  logger.info('User ID: ', { userId: id })
+  const userId = getUserId(event)
+  logger.info('User ID: ', { userId: userId })
 
-  const results = await docClient.query({
-    TableName: todosTable,
-    KeyConditionExpression: 'userId = :userId',
-    ExpressionAttributeValues: {
-      ':userId': id
+  // get sort parameter for DB query from incoming URL query string
+  const sortAscending = event.queryStringParameters.sort
+
+  // fetch list of user's todos
+  const todos = await getTodos(userId, (sortAscending=='true')?true:false)
+
+  if (!todos) {
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'DB server could not get a list of items'
+      })
     }
-  }).promise()
-  logger.info('Matching TODO items: ', results.Items)
-
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({
-      items: results.Items
-    })
+  } else {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({
+        items: todos
+      })
+    }
   }
 }

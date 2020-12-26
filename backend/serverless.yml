@@ -9,6 +9,11 @@ package:
   individually: true
 
 provider:
+
+  tracing:
+    lambda: true
+    apiGateway: true
+
   name: aws
   runtime: nodejs12.x
 
@@ -20,7 +25,6 @@ provider:
     INDEX_NAME: Todos-Index-v4-${self:provider.stage}
     IMAGES_S3_BUCKET: serverless-todo-images-droye6245-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-
 
 functions:
 
@@ -48,6 +52,11 @@ functions:
         Action:
           - s3:GetObject
         Resource: "arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*"
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -66,6 +75,11 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
 
   UpdateTodo:
     handler: src/lambda/http/updateTodo.handler
@@ -84,6 +98,11 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
 
   DeleteTodo:
     handler: src/lambda/http/deleteTodo.handler
@@ -98,6 +117,11 @@ functions:
         Action:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
@@ -117,6 +141,11 @@ functions:
           - s3:PutObject
           - s3:GetObject
         Resource: "arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*"
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: "*"
 
 resources:
   Resources:

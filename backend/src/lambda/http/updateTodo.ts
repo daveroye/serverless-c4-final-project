@@ -1,13 +1,11 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
-import {getUserId} from '../utils'
 import { createLogger } from '../../utils/logger'
-import * as AWS  from 'aws-sdk'
+import { getUserId } from '../utils'
+import { udpateTodo } from '../../businessLogic/todos'
 
-const docClient = new AWS.DynamoDB.DocumentClient()
 const logger = createLogger('updateToDos')
-const todosTable = process.env.TODOS_TABLE
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
@@ -20,28 +18,27 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
   logger.info('Update for ToDo: ', updatedTodo)
 
-  const result = await docClient.update({
-    TableName : todosTable,
-    Key: {"userId": id, "todoId": todoId},
-    ExpressionAttributeNames: {"#n":"name" },
-    UpdateExpression: "set #n=:n, dueDate=:dd, done=:d",
-    ExpressionAttributeValues: {
-        ':n': updatedTodo.name,
-        ':dd': updatedTodo.dueDate,
-        ':d': updatedTodo.done
-    }
-  }).promise()
-  logger.info('result from DynamoDB: ', result)
+  if (await udpateTodo(updatedTodo, id, todoId)) {
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
-    body: JSON.stringify({
-      result
-    })
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: ""
+    }
+  } else {
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'DB server did not update todo item'
+      })
+    }
   }
 
 }
