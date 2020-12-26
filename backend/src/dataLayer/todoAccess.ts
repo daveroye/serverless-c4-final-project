@@ -15,15 +15,18 @@ export class ToDoAccess {
 
     constructor(
         private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
-        private readonly todoTable = process.env.TODOS_TABLE) {
+        private readonly todoTable = process.env.TODOS_TABLE,
+        private readonly indexName = process.env.INDEX_NAME) {
     }
 
-    async getTodos(userId: string): Promise<TodoItem[]> {
+    async getTodos(userId: string, sortAscending: boolean): Promise<TodoItem[]> {
         logger.info('Getting all todo items')
 
         // define query paramaters to be used to get all todo items including a key for pagination
         const queryParams = { TableName: this.todoTable,
 //                              Limit: 4, // used to test pagination
+                              IndexName: this.indexName,
+                              ScanIndexForward: sortAscending,
                               KeyConditionExpression: 'userId = :userId',
                               ExpressionAttributeValues: { ':userId': userId }}
         

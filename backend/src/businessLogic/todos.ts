@@ -6,8 +6,8 @@ import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 
 const toDoAccess = new ToDoAccess()
 
-export async function getTodos(userId: string): Promise<TodoItem[]> {
-    return toDoAccess.getTodos(userId)
+export async function getTodos(userId: string, sortAscending: boolean): Promise<TodoItem[]> {
+    return toDoAccess.getTodos(userId, sortAscending)
 }
 
 export async function createTodo(

@@ -12,7 +12,11 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const userId = getUserId(event)
   logger.info('User ID: ', { userId: userId })
 
-  const todos = await getTodos(userId)
+  // get sort parameter for DB query from incoming URL query string
+  const sortAscending = event.queryStringParameters.sort
+
+  // fetch list of user's todos
+  const todos = await getTodos(userId, (sortAscending=='true')?true:false)
 
   if (!todos) {
     return {

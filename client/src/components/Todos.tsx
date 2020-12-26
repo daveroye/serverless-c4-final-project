@@ -28,6 +28,7 @@ interface TodosState {
   newTodoName: string
   loadingTodos: boolean
   dueDate: string
+  sortAscending: boolean
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
@@ -35,7 +36,8 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     todos: [],
     newTodoName: '',
     loadingTodos: true,
-    dueDate: this.calculateDueDate()
+    dueDate: this.calculateDueDate(),
+    sortAscending: true
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,13 +48,27 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     this.setState({ dueDate: event.target.value })
   }
 
+  onSortAscendingChangeClick = async () => {
+    let sort = this.state.sortAscending
+    if (sort) {
+      sort = false
+    } else {
+      sort = true
+    }
+    try {
+      const todos = await getTodos(this.props.auth.getIdToken(), sort)
+      this.setState({ todos, loadingTodos: false, sortAscending: sort })
+    } catch (e) {
+      alert(`Failed to fetch todos: ${e.message}`)
+    }
+  }
+
   onEditButtonClick = (todoId: string) => {
     this.props.history.push(`/todos/${todoId}/edit`)
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
-      //const dueDate = this.calculateDueDate()
       const newTodo = await createTodo(this.props.auth.getIdToken(), {
         name: this.state.newTodoName,
         dueDate: this.state.dueDate
@@ -116,7 +132,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   async componentDidMount() {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
+      const todos = await getTodos(this.props.auth.getIdToken(), this.state.sortAscending)
       this.setState({
         todos,
         loadingTodos: false
@@ -156,7 +172,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             onChange={this.handleNameChange}
           />
         </Grid.Column>
-        <Grid.Column width={16}>
+        <Grid.Column width={6}>
           <Input 
             label="Due Date for task:"
             type="date" 
@@ -177,7 +193,6 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     if (this.state.loadingTodos) {
       return this.renderLoading()
     }
-
     return this.renderTodosList()
   }
 
@@ -194,6 +209,17 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   renderTodosList() {
     return (
       <Grid padded>
+        <Grid.Column width={6}>
+          <Button
+            floated='left'
+            color="purple"
+            onClick={() => this.onSortAscendingChangeClick()}>
+            {(!this.state.sortAscending) ? "Due Date Sort Ascending" : "Due Date Sort Descending"}
+          </Button>
+        </Grid.Column>
+        <Grid.Column width={16}>
+          <Divider />
+        </Grid.Column>
         {this.state.todos.map((todo, pos) => {
           return (
             <Grid.Row key={todo.todoId}>
