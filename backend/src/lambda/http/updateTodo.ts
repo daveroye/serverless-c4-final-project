@@ -9,11 +9,20 @@ const logger = createLogger('updateToDos')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
-  logger.info('Updating ToDo: ', { todoId: todoId })
-
-  // get user ID from incoming request
   const id = getUserId(event)
-  logger.info('User ID: ', { userId: id })
+  if (todoId == "" || id == "") {
+    return {
+      statusCode: 406,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+      },
+      body: JSON.stringify({
+        error: 'User and TodoItem IDs cannot be empty strings'
+      })
+    }
+  }
+  logger.info('Updating ToDo: ', { todoId: todoId, userId: id })
 
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
   logger.info('Update for ToDo: ', updatedTodo)
